@@ -6,6 +6,6 @@ More features incoming
 v0.1 Being able to accept queues 
 
 To do: 
-Allows auto select champions for SR game mode
-No message popped if user isn't logged in already
-Start queue only works if current phase is lobby / match making, should be changed.
+Allows auto select champions for SR game mode /n
+No message popped if user isn't logged in already /n
+Start queue only works if current phase is lobby / match making, should be changed. /n
