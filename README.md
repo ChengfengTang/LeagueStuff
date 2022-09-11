@@ -3,7 +3,7 @@ A League Of Legends app for auto accepting queues
 
 More features incoming
 
-v0.1 Being able to accept queues 
+v0.1 Being able to accept queues 9/10/2022
 
 To do:
 Allows auto select champions for SR game mode 
