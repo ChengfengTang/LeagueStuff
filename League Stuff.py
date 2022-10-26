@@ -16,6 +16,7 @@ async def connect(connection):
     if summoner.status != 200:
         print('Please login into your account and restart the script')
     else:
+        championId = 350
         while(True):
             #print(await summoner.json())
             print('Welcome,'+(await summoner.json()).get('displayName'))
@@ -43,9 +44,10 @@ async def connect(connection):
                 gamephase: None, Lobby, Matchmaking, InProgress, ChampSelect, ReadyCheck
                 """
                 #start the queue
-                if(currentphase == 'Lobby' or currentphase == 'Matchmaking' ):
+                if(currentphase == 'Lobby' or currentphase == 'Matchmaking' or currentphase == 'ChampSelect' ):
                     await connection.request('post', '/lol-lobby/v2/lobby/matchmaking/search')
                     while(True):
+                        #await connection.request('post', '/lol-game-client-chat/v1/party-messages', data ={'message':"xd"})
                         currentphase = await gamephase.json()
                         print(currentphase)
                         time.sleep(2)
@@ -54,9 +56,19 @@ async def connect(connection):
                         if currentphase == 'ReadyCheck':
                             await connection.request('post', '/lol-matchmaking/v1/ready-check/accept')
                         if currentphase == 'ChampSelect': # Draft: ban pick champs/skins, ARAM: rerolls, check teammates' rerolls, ranked: check winrate...etc
-                            await champSelect(connection)
+                            if championId != 0:
+                                session = await connection.request('get', '/lol-champ-select/v1/session')
+                                session = await session.json()
+                                #print(session)
+                                for action in session['actions'][0]:
+                                    if action['championId'] == 0:
+                                        # Pick champion
+                                        await connection.request('patch', '/lol-champ-select/v1/session/actions/%d' % action['id'],data = {'championId': championId})
+                                        await connection.request('post', '/lol-champ-select/v1/session/actions/%d' % action['id'] + '/complete',data = {'championId': championId})
+                                        #await connection.request('post', '/lol-game-client-chat/v1/party-messages', data ={'message':"xd"})
+                                        
                             break
-                        await connector.stop()
+                    await connector.stop()
                             
                 else:
                     print("Please create a lobby manually or using the commands first")
@@ -83,17 +95,27 @@ async def connect(connection):
                 print(summonerId)
                 pickables = await connection.request('get', '/lol-champions/v1/inventories/'+ str(summonerId)+'/champions')
                 res = await pickables.json()
+                pickable_champs = []
                 for champs in res: #for each champ
                     #print(champs.get('ownership'))
                     #{'freeToPlayReward': False, 'owned': True, 'rental': {'endDate': 0, 'purchaseDate': 1662308524000, 'rented': False, 'winCountRemaining': 0}}
                     for ownerships in champs.get('ownership').values(): #check the ownership of that champ
                         if(ownerships == True):
+                            print(champs.get('id'), end = ":")  #print championId for selection
+                            pickable_champs.append(champs.get('id'))
                             print(champs.get('name') + ":", end = "")
                             for skin in champs.get('skins'): #check ownership of each skin
                                 for ownerships in skin.get('ownership').values():
                                      if(ownerships == True):
                                         print(skin.get('name'), end = ",")
                             print()
+
+                print("Please enter the champion Id for the champion that you wish to instalock after acceting queue, or enter 0 to exit")
+                championId = input()
+  
+                while(int(championId) not in pickable_champs):
+                    print("You do not own that champion, please try again!")
+                    championId = input()
                 print()       
                     
             elif(userInput == "5"):
@@ -113,7 +135,6 @@ async def connect(connection):
                 
 async def champSelect(connection):
     for i in range(5):
-        
         try:
             summonerId = (await (await connection.request('get', '/lol-champ-select/v1/summoners/'+ str(i))).json()).get('summonerId')
 
