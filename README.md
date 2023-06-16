@@ -14,3 +14,4 @@ To do:
 Allows BP (What happenes if the champion we want to lockin is banned) 
 Allows chatting
 
+v0.4 Merged with Asbra/lcu-mm-auto-accept-auto-lock-champion.py, added small features
